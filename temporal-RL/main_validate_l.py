@@ -1,5 +1,3 @@
-# Lorenzo Bonasera 2024
-
 import copy
 import time
 from tqdm import tqdm
