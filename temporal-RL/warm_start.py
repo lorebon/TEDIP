@@ -36,7 +36,7 @@ def computePaths(X, y, n_estimators, min_size, max_size, n_shap, max_depth, seed
     clf = ShapeletForestClassifier(n_estimators=n_estimators, random_state=seed,
                                    min_samples_leaf=np.ceil(0.05*X.shape[0]).astype(int),
                                    min_shapelet_size=min_size, max_shapelet_size=max_size,
-                                   bootstrap=True, n_shapelets=500, max_depth=3)
+                                   bootstrap=True, n_shapelets=n_shap, max_depth=3)
 
     # stavolta voglio estrarre TUTTI i path presenti nella foresta
     clf.fit(X, y)
