@@ -1,1 +1,1 @@
-# TED: Tree Ensemble Distillation
+# DIP: Distillation of tree ensembles through Integer Programming
