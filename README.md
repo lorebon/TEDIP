@@ -1,1 +1,1 @@
-# DIP: Distillation of tree ensembles through Integer Programming
+# TEDIP: Tree Ensembles Distillation through Integer Programming
