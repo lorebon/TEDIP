@@ -42,7 +42,6 @@ def computeValidation(X_train, y_train, X_test, y_test, depth, seed, lambd=1, le
 
 def computeAll(X_train, y_train, X_test, y_test, depth, seed, lambd=1, leaf_nodes=None, Nmin=None):
     n = X_train.shape[0]
-    #depth = np.ceil(np.log2(leaf_nodes)).astype(int)
 
     # start random forest
     paths, clf, trees_pathed, trees_noded = computePaths(X_train, y_train, 500, depth, seed)
