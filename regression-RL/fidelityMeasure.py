@@ -1,5 +1,3 @@
-# Lorenzo Bonasera 2024
-
 import numpy as np
 from warm_start import computePaths, computeLoss, computeScore, computeSample
 import gurobipy as gp
