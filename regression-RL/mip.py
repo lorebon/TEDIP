@@ -3,7 +3,7 @@ import numpy as np
 
 
 def generateCSP(L, n, A):
-    m = Model('CG shapelet - Integer MP')
+    m = Model('Integer MP')
     #m.setParam('OutputFlag', 0)
     z = m.addVars(L, vtype=GRB.BINARY, name="z")
     m.addConstrs((quicksum(A[i, j] * z[j] for j in range(L)) == 1 for i in range(n)), name='con1')
@@ -12,7 +12,7 @@ def generateCSP(L, n, A):
 
 
 def generateProblemSoft(L, n, A, l, loss, freq, lambd):
-    m = Model('CG shapelet - Integer MP')
+    m = Model('Integer MP')
     m.setParam('OutputFlag', 0)
     z = m.addVars(L, vtype=GRB.BINARY, name="z")
     m.addConstrs((quicksum(A[i, j] * z[j] for j in range(L)) == 1 for i in range(n)), name='con1')
