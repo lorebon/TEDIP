@@ -1,6 +1,7 @@
-from wildboar.ensemble import ShapeletForestClassifier
 import numpy as np
 from collections import Counter
+from sklearn.metrics import accuracy_score
+from wildboar.ensemble import ShapeletForestClassifier
 
 
 def minDist(shapelet, data, metric):
@@ -40,7 +41,6 @@ def computePaths(X, y, n_estimators, min_size, max_size, n_shap, max_depth, seed
 
     clf.fit(X, y)
     paths = []
-    max_depth = 3
 
     for idx in range(n_estimators):
         tree = clf.estimators_[idx].tree_
@@ -115,7 +115,6 @@ def computeLoss(X, y, paths, metric, Nmin=None):
         loss[i] = len(y_sampled) - Counter(y_sampled).most_common(1)[0][1]
         loss[i] = loss[i]/baseline
         weights[i] = len(y_sampled)
-        #weights[i] = -loss[i]
 
     print("check for fusions")
     fusion = []
@@ -132,9 +131,6 @@ def computeLoss(X, y, paths, metric, Nmin=None):
                 count += (2*shared)/(len(path_i)+len(path_j))
         #fusion.append(count/len(paths))
         fusion.append(count)
-
-    if len(fusion) == 0:
-        return None, None, None, None, None, None
 
     if max(fusion) != min(fusion):
         fusion = [(float(i) - min(fusion)) / (max(fusion) - min(fusion)) for i in fusion]
