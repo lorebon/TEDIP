@@ -59,16 +59,9 @@ def computePaths(X, y, n_estimators, max_depth, seed):
             if 0 < len(path) <= max_depth:
                 paths.append(list(reversed(path)))
                 tree_paths.append(list(reversed(path)))
-                #while len(path) > 1:
-                #    path = path[1:]
-                #    tree_paths.append(list(reversed(path)))
 
         trees_pathed.append(tree_paths)
         trees_noded.append(tree_nodes)
-
-    #test
-    #print("unique paths:", len(set(tuple(item) for item in paths)))
-    #paths = [list(item) for item in set(tuple(item) for item in paths)]
 
     return paths, clf, trees_pathed, trees_noded
 
@@ -153,7 +146,6 @@ def computeLoss(X, y, paths, Nmin=None):
     samples = [samples[idx] for idx in path_indices]
     loss = [loss[idx] for idx in path_indices]
     labels = [labels[idx] for idx in path_indices]
-    #weights = weights/np.sum(weights)
     weights = [weights[idx] for idx in path_indices]
 
 
@@ -204,22 +196,6 @@ def checkTreePaths(paths, trees):
     return represented_trees/len(trees)
 
 
-def findBestTree(X, y, trees, lambd=1):
-    max = np.inf
-    max_index = None
-    max_labels = None
-
-    for idx, tree in enumerate(trees):
-        loss, _, labels, _, fusion, _ = computeLoss(X, y, tree, None)
-        obj = sum(loss) - lambd*sum(fusion)
-        if obj < max:
-            max = obj
-            max_index = idx
-            max_labels = labels
-
-    return trees[max_index], max_labels
-
-
 def checkTrees(paths, trees):
     represented_trees = 0
     for tree in trees:
@@ -233,31 +209,3 @@ def checkTrees(paths, trees):
         represented_trees += represented
 
     return represented_trees/len(trees)
-
-
-def computeScoreTree(X, y, paths, labels):
-    n = X.shape[0]
-
-    y_pred = np.zeros(len(y))
-    for i in range(n):
-        for p, path in enumerate(paths):
-            if computeSample(X[i, :], path, 0):
-                y_pred[i] = labels[p]
-
-    return accuracy_score(y, y_pred)
-
-
-def plotPaths(loss, fusion, labels, leaves):
-    # Create a scatter plot
-    plt.scatter(loss, fusion, color='blue', marker='o', s=10)
-
-    # Mark specific points in red
-    plt.scatter([loss[i] for i in leaves],
-                [fusion[i] for i in leaves],
-                color='red', marker='o', s=10)
-    plt.xlabel('Loss')
-    plt.ylabel('Fusions')
-    plt.title('2D Scatter Plot')
-
-    # Show the plot
-    plt.show()
