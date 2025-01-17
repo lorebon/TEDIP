@@ -3,8 +3,7 @@ from scipy import stats
 from mip import generateProblem, generateProblemSoft, generateCSP
 import numpy as np
 from metrics import euclidean, scaled_euclidean, minkowski, scaled_minkowski
-from ShapeletNode import minDist
-from warm_start_tree import *
+from warm_start import *
 import gurobipy as gp
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
