@@ -30,8 +30,6 @@ def computeValidation(X_train, y_train, X_test, y_test, depth, seed, lambd=1, le
 
     if leaf_nodes is not None:
         model, z = generateProblemSoft(L, n, A, leaf_nodes, loss, freq, lambd)
-        #model.setObjective(quicksum((lambd)*freq[j] * z[j] for j in range(L)) - (1-lambd) * quicksum(loss[j] * z[j] for j in range(L)),
-        #               sense=GRB.MAXIMIZE)
         model.optimize()
 
         if model.Status == GRB.INFEASIBLE:
@@ -60,11 +58,8 @@ def computeAll(X_train, y_train, X_test, y_test, depth, seed, lambd=1, leaf_node
     for j in range(L):
         A[samples[j], j] = 1
 
-    # check upper bound on l
     if leaf_nodes is not None:
         model, z = generateProblemSoft(L, n, A, leaf_nodes, loss, freq, lambd)
-        #model.setObjective(quicksum((lambd)*freq[j] * z[j] for j in range(L)) - (1-lambd) * quicksum(loss[j] * z[j] for j in range(L)),
-        #               sense=GRB.MAXIMIZE)
         model.optimize()
 
         leaves = [idx for idx, x in enumerate(model.getAttr("x", model.getVars())) if x > 0.5]
