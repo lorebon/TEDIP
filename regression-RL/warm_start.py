@@ -171,8 +171,8 @@ def computeScore(X, y, paths, labels, weights):
         elif len(covered_leaves) == 1:
             y_pred[i] = covered_labels[0]
         else:
-            #y_pred[i] = np.mean(labels)
-            y_pred[i] = 0
+            y_pred[i] = np.mean(labels)
+            #y_pred[i] = 0
 
     return mean_squared_error(y, y_pred)
 
