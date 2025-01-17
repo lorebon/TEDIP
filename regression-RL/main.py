@@ -1,7 +1,7 @@
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import numpy as np
-from ColumnGeneration_tree import computeAll, computeDifferentLambda
+from GenerateProblem import computeAll
 from fidelityMeasure import regressionDisagreement, F1ComplCorr
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
