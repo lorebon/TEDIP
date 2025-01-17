@@ -1,4 +1,3 @@
-# Lorenzo Bonasera 2024
 from scipy import stats
 from mip import generateProblem, generateProblemSoft, generateCSP
 import numpy as np
