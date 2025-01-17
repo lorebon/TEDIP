@@ -1,4 +1,4 @@
-from mip import generateProblem, generateProblemSoft, generateCSP
+from mip import generateProblemSoft, generateCSP
 import numpy as np
 from warm_start import *
 import gurobipy as gp
