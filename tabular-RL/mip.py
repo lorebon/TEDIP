@@ -11,7 +11,7 @@ def generateCSP(L, n, A):
     return m, z
 
 
-def generateProblemSoft(L, n, A, l, loss, freq, lambd):
+def generateProblemSoft(L, n, A, l, loss, freq, lambd=0.5):
     m = Model('Integer MP')
     m.setParam('OutputFlag', 0)
     z = m.addVars(L, vtype=GRB.BINARY, name="z")
