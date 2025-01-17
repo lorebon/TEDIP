@@ -137,7 +137,6 @@ def computeAll(X_train, y_train, X_test, y_test, depth, seed, lambd=1, leaf_node
     # print("leaves:", leaves)
     reprtrees = checkTrees([paths[i] for i in leaves], trees_noded)
     reprpaths = checkTreePaths([paths[i] for i in leaves], trees_pathed)
-    # plotPaths(loss, freq, labels, leaves)
     acc = computeScore(X_test, y_test, [paths[i] for i in leaves], [labels[i] for i in leaves], [weights[i] for i in leaves])
     return reprtrees, reprpaths, [paths[i] for i in leaves], [labels[i] for i in leaves], clf, acc, og_score
         
