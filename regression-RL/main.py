@@ -32,10 +32,7 @@ def computeResults(dataset, seed):
     leaf_nodes = 15
     depth = 3
 
-    #computeDifferentLambda(X_train, y_train, X_test, y_test, depth, seed=seed, eps=None, leaf_nodes=leaf_nodes)
-    #exit(1)
-
-    reptrees, reprpaths, paths, labels, clf, acc, og_score = computeAll(X_train, y_train, X_test, y_test, depth, seed=seed, eps=None, leaf_nodes=leaf_nodes)
+    reptrees, reprpaths, paths, labels, clf, acc, og_score = computeAll(X_train, y_train, X_test, y_test, depth, seed=seed, leaf_nodes=leaf_nodes)
     disag = regressionDisagreement(X_test, y_test, clf, paths, labels)
     f1_score = F1ComplCorr(clf, paths)
     data = [seed, reptrees, reprpaths, disag, f1_score, len(paths), acc, og_score]
