@@ -58,9 +58,6 @@ def computePaths(X, y, n_estimators, max_depth, seed):
             if 0 < len(path) <= max_depth:
                 paths.append(list(reversed(path)))
                 tree_paths.append(list(reversed(path)))
-                #while len(path) > 1:
-                #    path = path[1:]
-                #    tree_paths.append(list(reversed(path)))
 
         trees_pathed.append(tree_paths)
         trees_noded.append(tree_nodes)
