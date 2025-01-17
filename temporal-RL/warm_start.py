@@ -2,6 +2,7 @@ from wildboar.ensemble import ShapeletForestClassifier
 import numpy as np
 from collections import Counter
 
+
 def minDist(shapelet, data, metric):
     min_distance = float('inf')
 
