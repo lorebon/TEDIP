@@ -10,14 +10,11 @@ from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from metrics import euclidean
-from fidelityMeasure import regressionDisagreement
 from preprocessing import preprocessTrain, preprocessTest
 import multiprocessing as mp
 import argparse
 import os
 from sktime.datasets import load_UCR_UEA_dataset
-import wildboar
-import sklearn
 
 
 def computeResults(dataset, minshap, maxshap, n_shap, seed):
@@ -33,7 +30,7 @@ def computeResults(dataset, minshap, maxshap, n_shap, seed):
     X_test, y_test = load_UCR_UEA_dataset(name=dataset, split='Test', return_X_y=True)
     X_test, y_test = preprocessTest(X_test, y_test, y_set, scaler)
 
-    columns = ['Seed', 'Represented trees', 'Represented paths', 'Disagreement', 'Leaves', 'Accuracy', 'Full Model']
+    columns = ['Seed', 'Represented trees', 'Represented paths', 'Leaves', 'Accuracy', 'Full Model']
 
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
 
@@ -66,9 +63,7 @@ def computeResults(dataset, minshap, maxshap, n_shap, seed):
     if reptrees is None:
         return None
 
-    disag = regressionDisagreement(X_test, y_test, clf, paths, labels)
-    #f1_score = F1ComplCorr(clf, paths)
-    data = [seed, reptrees, reprpaths, disag, len(paths), acc, og_score]
+    data = [seed, reptrees, reprpaths, len(paths), acc, og_score]
     df = pd.DataFrame([data], columns=columns)
     return df
 
