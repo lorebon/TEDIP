@@ -1,7 +1,7 @@
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 import numpy as np
-from collections import Counter
 from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
 
 
 def findParents(tree):
@@ -25,22 +25,21 @@ def findParents(tree):
 
 def computePaths(X, y, n_estimators, max_depth, seed):
     print("computing paths...")
-    #min_samples_leaf=np.ceil(0.05*X.shape[0]).astype(int)
     clf = RandomForestRegressor(n_estimators=n_estimators, random_state=seed,
                                  max_depth=max_depth)
 
-    #clf = GradientBoostingRegressor(n_estimators=n_estimators, random_state=seed,
-    #                                min_samples_leaf=np.ceil(0.05*X.shape[0]).astype(int),
-    #                                max_depth=max_depth)
-
     clf.fit(X, y)
     paths = []
+    trees_pathed = []
+    trees_noded = []
 
     for idx in range(n_estimators):
         #tree = clf.estimators_[idx][0].tree_
         tree = clf.estimators_[idx].tree_
         leaf_nodes = [t.item() for t in np.argwhere(tree.children_left == -1)]
         parents = findParents(tree)
+        tree_nodes = set()
+        tree_paths = []
         for leaf in leaf_nodes:
             path = []
             parent = parents[leaf]
@@ -48,18 +47,28 @@ def computePaths(X, y, n_estimators, max_depth, seed):
                 if parent > 0:
                     parent = round(abs(parent))
                     path.append((tree.feature[parent], tree.threshold[parent], 'L'))
+                    tree_nodes.add((tree.feature[parent], tree.threshold[parent], 'L'))
                 else:
                     parent = round(abs(parent))
                     path.append((tree.feature[parent], tree.threshold[parent], 'R'))
+                    tree_nodes.add((tree.feature[parent], tree.threshold[parent], 'R'))
                 parent = parents[parent]
 
             # check for max depth
-            paths.append(list(reversed(path)))
+            if 0 < len(path) <= max_depth:
+                paths.append(list(reversed(path)))
+                tree_paths.append(list(reversed(path)))
+                #while len(path) > 1:
+                #    path = path[1:]
+                #    tree_paths.append(list(reversed(path)))
 
-    return paths, clf
+        trees_pathed.append(tree_paths)
+        trees_noded.append(tree_nodes)
+
+    return paths, clf, trees_pathed, trees_noded
 
 
-def computeSample(data, path, idx):
+def computeSample(data, path, idx=0):
     if idx >= len(path):
         return True
 
@@ -73,10 +82,9 @@ def computeSample(data, path, idx):
     return False
 
 
-def computeLoss(X, y, paths, eps=None):
+def computeLoss(X, y, paths, Nmin=None):
     n = X.shape[0]
     samples = []
-    path_indices = list(range(len(paths)))
 
     # compute samples
     print("assigning samples...")
@@ -87,16 +95,26 @@ def computeLoss(X, y, paths, eps=None):
                 sample.append(i)
         samples.append(sample)
 
+    if Nmin is not None:
+        paths_new = [path for (path, sample) in zip(paths, samples) if len(sample) >= np.ceil(Nmin*X.shape[0]).astype(int)]
+        samples_new = [sample for (path, sample) in zip(paths, samples) if len(sample) >= np.ceil(Nmin*X.shape[0]).astype(int)]
+        paths = paths_new
+        samples = samples_new
+        if len(paths) == 0:
+            return None, None, None, None, None, None
+
+    path_indices = list(range(len(paths)))
     number_of_paths = len(paths)
     loss = np.zeros(number_of_paths)
     labels = np.zeros(number_of_paths)
+    weights = np.zeros(number_of_paths)
 
     print("computing loss...")
     for i, sample in enumerate(samples):
         y_sampled = y[sample]
         labels[i] = np.mean(y_sampled)
         loss[i] = mean_squared_error(y_sampled, np.repeat(labels[i], len(y_sampled)))
-
+        weights[i] = len(y_sampled)
 
     print("check for fusions")
 
@@ -107,30 +125,54 @@ def computeLoss(X, y, paths, eps=None):
             if j != i:
                 shared = 0
                 for k in range(min(len(path_i), len(path_j))):
-                    if path_i[k][:-1] == path_j[k][:-1]:
+                    if path_i[k] == path_j[k]:
                         shared += 1
                 count += (2*shared)/(len(path_i)+len(path_j))
-        #fusion.append(count/len(paths))
+
         fusion.append(count)
 
-    print("fusions:", sorted(fusion, reverse=True))
+    if len(fusion) == 0:
+        return None, None, None, None, None, None
+
+    if max(fusion) != min(fusion):
+        fusion = [(float(i) - min(fusion)) / (max(fusion) - min(fusion)) for i in fusion]
+    if max(loss) != min(loss):
+        loss = [(float(i) - min(loss)) / (max(loss) - min(loss)) for i in loss]
+    #print("fusions:", sorted(fusion, reverse=True))
 
     paths = [paths[idx] for idx in path_indices]
     samples = [samples[idx] for idx in path_indices]
     loss = [loss[idx] for idx in path_indices]
     labels = [labels[idx] for idx in path_indices]
+    weights = [weights[idx] for idx in path_indices]
 
-    return loss, samples, labels, paths, fusion
+
+    return loss, samples, labels, paths, fusion, weights
 
 
-def computeScore(X, y, paths, labels):
+def computeScore(X, y, paths, labels, weights):
     n = X.shape[0]
 
     y_pred = np.zeros(len(y))
-    for p, path in enumerate(paths):
-        for i in range(n):
+    for i in range(n):
+        covered_labels = []
+        covered_leaves = []
+        for p, path in enumerate(paths):
             if computeSample(X[i, :], path, 0):
-                y_pred[i] = labels[p]
+                #y_pred[i] = labels[p]
+                covered_labels.append(labels[p])
+                covered_leaves.append(p)
+
+        if len(covered_leaves) > 1:
+            covered_weights = [weight for idx, weight in enumerate(weights) if idx in covered_leaves]
+            covered_weights = [w/np.sum(covered_weights) for w in covered_weights]
+            #y_pred[i] = np.mean([a*b for (a,b) in zip(covered_labels, covered_weights)])
+            y_pred[i] = covered_labels[np.argmax(covered_weights)]
+        elif len(covered_leaves) == 1:
+            y_pred[i] = covered_labels[0]
+        else:
+            #y_pred[i] = np.mean(labels)
+            y_pred[i] = 0
 
     return mean_squared_error(y, y_pred)
 
@@ -139,6 +181,36 @@ def sorensenDice(Z1, Z2):
     numerator = 2 * len(set(Z1) & set(Z2))
     denominator = len(Z1) + len(Z2)
     return round(numerator/denominator, 2)
+
+
+def checkTreePaths(paths, trees):
+    represented_trees = 0
+    for tree in trees:
+        represented = 0
+        for tree_path in tree:
+            if represented == 0:
+                for path in paths:
+                    if tree_path == path:
+                        represented = 1
+                        break
+        represented_trees += represented
+
+    return represented_trees/len(trees)
+
+
+def checkTrees(paths, trees):
+    represented_trees = 0
+    for tree in trees:
+        represented = 0
+        for node in tree:
+            if represented == 0:
+                for path in paths:
+                    if node in path:
+                        represented = 1
+                        break
+        represented_trees += represented
+
+    return represented_trees/len(trees)
 
 
 
