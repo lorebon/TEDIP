@@ -34,11 +34,9 @@ def findParents(tree):
 def computePaths(X, y, n_estimators, min_size, max_size, n_shap, max_depth, seed):
     print("computing paths...")
     clf = ShapeletForestClassifier(n_estimators=n_estimators, random_state=seed,
-                                   min_samples_leaf=np.ceil(0.05*X.shape[0]).astype(int),
                                    min_shapelet_size=min_size, max_shapelet_size=max_size,
-                                   bootstrap=True, n_shapelets=n_shap, max_depth=3)
+                                   n_shapelets=n_shap, max_depth=3)
 
-    # stavolta voglio estrarre TUTTI i path presenti nella foresta
     clf.fit(X, y)
     paths = []
     max_depth = 3
@@ -66,43 +64,57 @@ def computePaths(X, y, n_estimators, min_size, max_size, n_shap, max_depth, seed
     return paths, clf
 
 
-def computeSample(data, path, idx, metric):
+def computeSample(data, path, metric, idx=0):
     if idx >= len(path):
         return True
 
     node = path[idx]
     if node[2] == 'L' and minDist(node[0], data, metric) <= node[1]:
-            return computeSample(data, path, idx+1, metric)
+            return computeSample(data, path, metric, idx+1)
 
     elif node[2] == 'R' and minDist(node[0], data, metric) > node[1]:
-            return computeSample(data, path, idx+1, metric)
+            return computeSample(data, path, metric, idx+1)
 
     return False
 
 
-def computeLoss(X, y, paths, metric, eps=None):
+def computeLoss(X, y, paths, metric, Nmin=None):
     n = X.shape[0]
     samples = []
-    path_indices = list(range(len(paths)))
 
     # compute samples
     print("assigning samples...")
     for p, path in enumerate(paths):
         sample = []
         for i in range(n):
-            if computeSample(X[i, :], path, 0, metric):
+            if computeSample(X[i, :], path, metric):
                 sample.append(i)
         samples.append(sample)
 
+    if Nmin is not None:
+        paths_new = [path for (path, sample) in zip(paths, samples) if len(sample) >= np.ceil(Nmin*X.shape[0]).astype(int)]
+        samples_new = [sample for (path, sample) in zip(paths, samples) if len(sample) >= np.ceil(Nmin*X.shape[0]).astype(int)]
+        paths = paths_new
+        samples = samples_new
+        if len(paths) == 0:
+            return None, None, None, None, None, None
+
+    path_indices = list(range(len(paths)))
     number_of_paths = len(paths)
     loss = np.zeros(number_of_paths)
     labels = np.zeros(number_of_paths)
+    weights = np.zeros(number_of_paths)
+
+    baseline = np.unique(y, return_counts=True)[1].max()
 
     print("computing loss...")
     for i, sample in enumerate(samples):
         y_sampled = y[sample]
         labels[i] = Counter(y_sampled).most_common(1)[0][0]
         loss[i] = len(y_sampled) - Counter(y_sampled).most_common(1)[0][1]
+        loss[i] = loss[i]/baseline
+        weights[i] = len(y_sampled)
+        #weights[i] = -loss[i]
 
     print("check for fusions")
     fusion = []
@@ -120,35 +132,48 @@ def computeLoss(X, y, paths, metric, eps=None):
         #fusion.append(count/len(paths))
         fusion.append(count)
 
-    print("fusions:", sorted(fusion, reverse=True))
+    if len(fusion) == 0:
+        return None, None, None, None, None, None
 
-    baseline = np.unique(y, return_counts=True)[1].max()
+    if max(fusion) != min(fusion):
+        fusion = [(float(i) - min(fusion)) / (max(fusion) - min(fusion)) for i in fusion]
+    if max(loss) != min(loss):
+        loss = [(float(i) - min(loss)) / (max(loss) - min(loss)) for i in loss]
+
+    print("loss:", sorted(loss))
+    print("fusions:", sorted(fusion, reverse=True))
 
     paths = [paths[idx] for idx in path_indices]
     samples = [samples[idx] for idx in path_indices]
-    loss = [loss[idx]/baseline for idx in path_indices]
+    loss = [loss[idx] for idx in path_indices]
     labels = [labels[idx] for idx in path_indices]
+    weights = [weights[idx] for idx in path_indices]
 
-    return loss, samples, labels, paths, fusion
+    return loss, samples, labels, paths, fusion, weights
 
 
-def computeScore(X, y, paths, labels, metric):
+def computeScore(X, y, paths, labels, metric, weights, mode):
     n = X.shape[0]
 
-    loss = 0
-    samples = []
-    for p, path in enumerate(paths):
-        sample = []
-        for i in range(n):
-            if computeSample(X[i, :], path, 0, metric):
-                sample.append(i)
-        samples.append(sample)
+    y_pred = np.zeros(len(y))
+    for i in range(n):
+        covered_labels = []
+        covered_leaves = []
+        for p, path in enumerate(paths):
+            if computeSample(X[i, :], path, metric):
+                covered_labels.append(labels[p])
+                covered_leaves.append(p)
 
-    for i, sample in enumerate(samples):
-        y_sampled = y[sample]
-        loss += len(y_sampled) - len([x for x in y_sampled if x == labels[i]])
+        # in case or 2+ or 0 rules
+        if len(covered_leaves) > 1:
+            covered_weights = [weight for idx, weight in enumerate(weights) if idx in covered_leaves]
+            y_pred[i] = covered_labels[np.argmax(covered_weights)]
+        elif len(covered_leaves) == 1:
+            y_pred[i] = covered_labels[0]
+        else:
+            y_pred[i] = mode
 
-    return (n - loss)/n * 100
+    return accuracy_score(y, y_pred)
 
 
 def sorensenDice(Z1, Z2):
