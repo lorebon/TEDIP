@@ -1,0 +1,25 @@
+# Exact local validation snapshot: Windows, Python 3.12.14 (September 2026).
+# Includes optional temporal/UCI dependencies and developer tools.
+# Use requirements.txt / requirements-temporal.txt for other Python versions.
+certifi==2026.7.22
+cloudpickle==3.1.2
+colorama==0.4.6
+gurobipy==13.0.3
+iniconfig==2.3.0
+joblib==1.6.0
+numpy==2.5.3
+packaging==26.3
+pandas==3.0.6
+pluggy==1.6.0
+Pygments==2.21.0
+python-dateutil==2.9.0.post0
+ruff==0.16.9
+scikit-base==1.1.1
+scikit-learn==1.5.2
+scipy==1.18.1
+six==1.17.0
+sktime==1.2.0
+threadpoolctl==3.7.0
+tzdata==2026.4
+ucimlrepo==0.0.7
+wildboar==1.2.1

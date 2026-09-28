@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this research code, please cite the associated paper."
+title: "TEDIP: Tree Ensembles Distillation through Integer Programming"
+type: software
+authors:
+  - family-names: Bonasera
+    given-names: Lorenzo
+  - family-names: Carrizosa
+    given-names: Emilio
+license: MIT
+preferred-citation:
+  type: article
+  title: "A unified approach to extract interpretable rules from tree ensembles via Integer Programming"
+  authors:
+    - family-names: Bonasera
+      given-names: Lorenzo
+    - family-names: Carrizosa
+      given-names: Emilio
+  journal: "Computers & Operations Research"
+  volume: 185
+  year: 2026
+  start: '107283'
+  doi: "10.1016/j.cor.2025.107283"
