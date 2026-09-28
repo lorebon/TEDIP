@@ -1,0 +1,4 @@
+-r requirements.txt
+# The tree adapter is verified against this Wildboar release.
+wildboar==1.2.1
+sktime>=0.30,<2

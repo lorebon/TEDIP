@@ -1,0 +1,6 @@
+# Core experiments. Python 3.10-3.12; no repository installation is needed.
+numpy>=1.24,<3
+scipy>=1.10,<2
+pandas>=2,<4
+scikit-learn>=1.3,<1.6
+gurobipy>=11,<14
